@@ -47,8 +47,6 @@ schedule.scheduleJob("*/1 * * * *", async () => {
 
       const uniqueGpsData = _.uniqBy(gpsData, "comparatorKey");
 
-      console.log(uniqueGpsData);
-
       try {
         console.log("gps api call");
         const res = await axios.post(
