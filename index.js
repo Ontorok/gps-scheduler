@@ -5,6 +5,7 @@ const cors = require("cors");
 const schedule = require("node-schedule");
 const axios = require("axios");
 const _ = require("lodash");
+const moment = require("moment");
 
 const app = express();
 
@@ -12,23 +13,21 @@ app.use(express.json());
 app.use(cors());
 
 const PORT = process.env.PORT || 3600;
-schedule.scheduleJob("*/1 * * * *", async () => {
+schedule.scheduleJob("* 8 * * *", async () => {
   try {
     console.log("knack_api call");
-    const res = await axios.post(
-      "http://54.203.84.201/knack_api/getdata.php?date=2022-01-13",
-      null,
-      {
-        headers: {
-          Authorization: "Bearer 05cd2aae5110da03fee3b47ecc2c41bc",
-        },
-      }
-    );
+    const date = moment(new Date()).format("yyyy-MM-DD");
+    const url = `http://54.203.84.201/knack_api/getdata.php?date=${date}`;
+    const res = await axios.post(url, null, {
+      headers: {
+        Authorization: "Bearer 05cd2aae5110da03fee3b47ecc2c41bc",
+      },
+    });
     const data = res.data;
     const { status, ...rest } = data;
 
-    const isEmptyObject = Object.entries(rest).length === 0;
-    if (!isEmptyObject) {
+    const hasData = res.data && res.data === "No Record Found";
+    if (hasData) {
       const gpsData = Object.keys(rest)
         .map((key) => rest[key])
         .map((entry, index) => ({
@@ -50,15 +49,17 @@ schedule.scheduleJob("*/1 * * * *", async () => {
       try {
         console.log("gps api call");
         const res = await axios.post(
-          "http://192.168.0.21:3500/api/entries/save-entries",
+          "https://gps-data-api-v3.herokuapp.com/api/entries/save-entries",
           uniqueGpsData
         );
       } catch (err) {
-        console.log(err);
+        console.log(err.response.data.message);
       }
+    } else {
+      console.log("no data");
     }
   } catch (err) {
-    console.log(err);
+    console.log(err.message);
   }
 });
 
