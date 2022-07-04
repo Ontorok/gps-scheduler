@@ -15,7 +15,6 @@
     "lodash": "^4.17.21",
     "moment": "^2.29.3",
     "mongoose": "^6.2.9",
-    "node-fetch": "^3.2.6",
     "node-schedule": "^2.1.0",
     "uuid": "^8.3.2"
   },
