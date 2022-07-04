@@ -13,25 +13,23 @@ app.use(express.json());
 app.use(cors());
 
 const PORT = process.env.PORT || 3600;
-schedule.scheduleJob("*/5 * * * * *", async () => {
+schedule.scheduleJob("*/10 * * * * *", async () => {
   try {
     console.log("knack_api call");
-    const date = moment(new Date("2022-07-02")).format("yyyy-MM-DD");
-    const url = `http://54.203.84.201/knack_api/getdata.php?date=2022-07-02`;
-    const res = await axios.post(
-      "http://54.203.84.201/knack_api/getdata.php?date=2022-07-02",
-      null,
-      {
-        headers: {
-          Authorization: "Bearer 05cd2aae5110da03fee3b47ecc2c41bc",
-        },
-      }
-    );
+
+    const date = moment(new Date()).subtract(1, "day").format("yyyy-MM-DD");
+    const url = `http://54.203.84.201/knack_api/getdata.php?date=${date}`;
+
+    const res = await axios.post(url, null, {
+      headers: {
+        Authorization: "Bearer 05cd2aae5110da03fee3b47ecc2c41bc",
+      },
+    });
     const data = res.data;
     const { status, ...rest } = data;
 
-    const hasData = true;
-    if (hasData) {
+    const hasNoData = rest.Data && rest.Data === "No Record Found";
+    if (!hasNoData) {
       const gpsData = Object.keys(rest)
         .map((key) => rest[key])
         .map((entry, index) => ({
@@ -45,7 +43,7 @@ schedule.scheduleJob("*/5 * * * * *", async () => {
           trailId: JSON.parse(entry.Trail)["id"],
           trailName: JSON.parse(entry.Trail)["identifier"],
           fundingStatus: entry["Funded/non-funded"],
-          eligibleTime: entry["Eligible Time"],
+          eligibleTime: Number(entry["Eligible Time"]),
         }));
 
       const uniqueGpsData = _.uniqBy(gpsData, "comparatorKey");
@@ -60,7 +58,7 @@ schedule.scheduleJob("*/5 * * * * *", async () => {
         console.log(err.response.data.message);
       }
     } else {
-      console.log("no data");
+      console.log(rest.Data);
     }
   } catch (err) {
     console.log(err.message);
