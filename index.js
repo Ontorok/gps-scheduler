@@ -7,6 +7,9 @@ const axios = require("axios");
 const _ = require("lodash");
 const moment = require("moment");
 
+const convertSecondToHour = (sec) =>
+  sec === 0 ? 0 : Number((sec / 3600).toFixed(2));
+
 const app = express();
 
 app.use(express.json());
@@ -38,12 +41,15 @@ schedule.scheduleJob("*/10 * * * * *", async () => {
           }_${entry["Funded/non-funded"]}`,
           deviceId: entry.deviceID,
           date: entry.date,
-          clubId: JSON.parse(entry.County)[0]["id"],
-          clubName: JSON.parse(entry.County)[0]["identifier"],
+          countyId: JSON.parse(entry.County)[0]["id"],
+          countyName: JSON.parse(entry.County)[0]["identifier"],
           trailId: JSON.parse(entry.Trail)["id"],
           trailName: JSON.parse(entry.Trail)["identifier"],
           fundingStatus: entry["Funded/non-funded"],
           eligibleTime: Number(entry["Eligible Time"]),
+          eligibleTimeInHour: convertSecondToHour(
+            Number(entry["Eligible Time"])
+          ),
         }));
 
       const uniqueGpsData = _.uniqBy(gpsData, "comparatorKey");
@@ -51,7 +57,7 @@ schedule.scheduleJob("*/10 * * * * *", async () => {
       try {
         console.log("gps api call");
         const res = await axios.post(
-          "https://gps-data-api-v3.herokuapp.com/api/entries/save-entries",
+          "http://localhost:3500/api/entries/save-entries",
           uniqueGpsData
         );
       } catch (err) {
