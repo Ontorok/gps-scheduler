@@ -57,7 +57,7 @@ schedule.scheduleJob("*/10 * * * * *", async () => {
       try {
         console.log("gps api call");
         const res = await axios.post(
-          "http://localhost:3500/api/entries/save-entries",
+          "https://gps-data-api-v3.herokuapp.com/api/entries/save-entries",
           uniqueGpsData
         );
       } catch (err) {
